@@ -52,7 +52,7 @@
 		"globals": "^15.8.0",
 		"prettier": "^3.2.5",
 		"prettier-plugin-svelte": "^3.2.1",
-		"svelte": "^4.2.11",
+		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"svelte-material-icons": "^3.0.5",
 		"svelte-typewriter-store": "^0.0.6",
