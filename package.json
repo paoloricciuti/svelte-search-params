@@ -94,6 +94,6 @@
 		}
 	},
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^3.0.2"
+		"@sveltejs/vite-plugin-svelte": "^4.0.0"
 	}
 }
