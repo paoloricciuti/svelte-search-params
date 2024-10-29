@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	let { children } = $props();
 
-	onMount(() => {
+	$effect(() => {
 		document.body.setAttribute('data-kit-started', '');
 	});
 </script>
 
-<slot />
+{@render children?.()}

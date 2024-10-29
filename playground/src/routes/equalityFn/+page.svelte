@@ -1,43 +1,21 @@
 <script lang="ts">
-	import { queryParam, queryParameters, ssp } from 'sveltekit-search-params';
-	const obj = queryParam('obj', ssp.object<{ str: string }>(), {
-		equalityFn() {
-			return false;
-		},
+	import { untrack } from 'svelte';
+
+	import { queryParameters, ssp } from 'sveltekit-search-params';
+	const params = queryParameters({
+		str: ssp.object<{ value: string }>()(() => false),
 	});
 
-	let obj_changes = 0;
-	$: {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		$obj;
-		obj_changes++;
-	}
+	let store_changes = $state(0);
 
-	const params = queryParameters(
-		{
-			str2: true,
-		},
-		{
-			equalityFn() {
-				return false;
-			},
-		},
-	);
-
-	let store_changes = 0;
-	$: {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		$params;
-		store_changes++;
-	}
+	$effect(() => {
+		JSON.stringify(params.str?.value);
+		untrack(() => store_changes++);
+	});
 </script>
 
-{#if $obj}
-	<input data-testid="str-input" bind:value={$obj.str} />
-	<div data-testid="str">{$obj.str}</div>
+{#if params.str}
+	<input data-testid="str2-input" bind:value={params.str.value} />
+	<div data-testid="str2">{params.str.value}</div>
 {/if}
-<input data-testid="str2-input" bind:value={$params.str2} />
-<div data-testid="str2">{$params.str2}</div>
-
-<p data-testid="how-many-obj-changes">{obj_changes}</p>
 <p data-testid="how-many-store-changes">{store_changes}</p>

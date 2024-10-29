@@ -40,27 +40,27 @@
 		"changeset": "changeset"
 	},
 	"devDependencies": {
-		"@changesets/cli": "^2.27.1",
-		"@playwright/test": "^1.41.2",
-		"@sveltejs/adapter-static": "^3.0.1",
-		"@sveltejs/kit": "^2.5.0",
-		"@sveltejs/package": "^2.2.6",
-		"@svitejs/changesets-changelog-github-compact": "^1.1.0",
-		"eslint": "^9.8.0",
+		"@changesets/cli": "^2.27.9",
+		"@playwright/test": "^1.48.2",
+		"@sveltejs/adapter-static": "^3.0.6",
+		"@sveltejs/kit": "^2.7.3",
+		"@sveltejs/package": "^2.3.7",
+		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
+		"eslint": "^9.13.0",
 		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.43.0",
-		"globals": "^15.8.0",
-		"prettier": "^3.2.5",
-		"prettier-plugin-svelte": "^3.2.1",
-		"svelte": "^4.2.11",
-		"svelte-check": "^4.0.0",
+		"eslint-plugin-svelte": "^2.46.0",
+		"globals": "^15.11.0",
+		"prettier": "^3.3.3",
+		"prettier-plugin-svelte": "^3.2.7",
+		"svelte": "^5.1.3",
+		"svelte-check": "^4.0.5",
 		"svelte-material-icons": "^3.0.5",
 		"svelte-typewriter-store": "^0.0.6",
-		"tslib": "^2.6.2",
-		"typescript": "^5.0.0",
+		"tslib": "^2.8.0",
+		"typescript": "^5.6.3",
 		"typescript-eslint": "8.11.0",
-		"vite": "^5.1.3",
-		"vitest": "^2.0.0"
+		"vite": "^5.4.10",
+		"vitest": "^2.1.3"
 	},
 	"type": "module",
 	"peerDependencies": {
@@ -94,6 +94,6 @@
 		}
 	},
 	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^3.0.2"
+		"@sveltejs/vite-plugin-svelte": "^4.0.0"
 	}
 }
