@@ -12,7 +12,7 @@ export type CurriedEncodeAndDecode<T> = ((
 ) => EncodeAndDecodeOptions<T>) &
 	EncodeAndDecodeOptions<T>;
 
-export type StoreOptions = {
+export type NavigationOptions = {
 	debounceHistory?: number;
 	pushHistory?: boolean;
 	sort?: boolean;

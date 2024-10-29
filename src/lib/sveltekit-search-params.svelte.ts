@@ -3,8 +3,8 @@ import { goto } from '$app/navigation';
 import { page as page_store } from '$app/stores';
 import type { Page } from '@sveltejs/kit';
 import { fromStore, readable, type Readable } from 'svelte/store';
-import type { EncodeAndDecodeOptions, StoreOptions } from './types';
-export type { EncodeAndDecodeOptions, StoreOptions };
+import type { EncodeAndDecodeOptions, NavigationOptions } from './types';
+export type { EncodeAndDecodeOptions, NavigationOptions };
 
 // during building we fake the page store with an URL with no search params
 // as it should be during prerendering. This allow the application to still build
@@ -12,9 +12,7 @@ export type { EncodeAndDecodeOptions, StoreOptions };
 let page: Readable<Pick<Page, 'url'>>;
 if (building) {
 	page = readable({
-		url: new URL(
-			'http://example.com',
-		),
+		url: new URL('http://example.com'),
 	});
 } else {
 	page = page_store;
@@ -45,10 +43,11 @@ const GOTO_OPTIONS_PUSH = {
 	replaceState: false,
 };
 
+// type to get full autocomplete on T but also allow for any other string
 type LooseAutocomplete<T> = {
 	[K in keyof T]: T[K];
 } & {
-	[K: string]: any;
+	[K: string]: string | null;
 };
 
 type Options<T> = {
@@ -64,10 +63,6 @@ type Options<T> = {
 					: never
 				: null);
 };
-
-// type Overrides<T> = {
-// 	[Key in keyof T]?: T[Key] | null;
-// };
 
 type SetTimeout = ReturnType<typeof setTimeout>;
 
@@ -91,18 +86,19 @@ function do_navigate(
 	value: unknown,
 	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
 	overrides: Record<string | symbol, unknown>,
-	store_options: StoreOptions,
+	navigation_options: NavigationOptions,
 ) {
+	// if we are on the server just return since we can't navigate
 	if (!browser) return;
+	// set the overrides to have the value immediately
 	overrides[name] = value;
 	const {
 		debounceHistory = 0,
 		pushHistory = true,
 		sort = true,
-		// showDefaults = true,
-		// equalityFn,
-	} = store_options;
+	} = navigation_options;
 	const hash = window.location.hash;
+	// we batch the changes to prevent a new change arriving before the navigation from "negating" this change
 	const to_batch = (query: URLSearchParams) => {
 		if (value == undefined) {
 			query.delete(name);
@@ -134,8 +130,10 @@ function do_navigate(
 					`?${query}${hash}`,
 					pushHistory ? GOTO_OPTIONS_PUSH : GOTO_OPTIONS,
 				);
+				// reset overrides here since navigation finished
 				overrides[name] = undefined;
 			}
+			// if debounce is 0 just call it immediately (not even waiting 0)
 			if (debounceHistory === 0) {
 				navigate();
 			} else {
@@ -149,11 +147,16 @@ function do_navigate(
 	});
 }
 
+/**
+ * this is used for objects and arrays...when a property changes we actually
+ * want to change the base parameter...this function is passed through the
+ * recursive proxy so that we can invoke it when a nested property changes
+ */
 function create_root_navigator(
 	root: object,
 	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
 	overrides: Record<string | symbol, unknown>,
-	store_options: StoreOptions,
+	navigation_options: NavigationOptions,
 ) {
 	return (_path: string[], key: string, to_set: unknown) => {
 		const path = [..._path];
@@ -166,16 +169,21 @@ function create_root_navigator(
 		(current as any)[key] = to_set;
 		do_navigate(
 			name,
+			// this allow for `push` to work
 			Array.isArray(value) && key === 'length'
 				? structuredClone(value)
 				: value,
 			encodes,
 			overrides,
-			store_options,
+			navigation_options,
 		);
 	};
 }
 
+/**
+ * to keep track of all the changes in nested objects and arrays
+ * we need to create a recursive proxy
+ */
 function create_recursive_proxy<
 	T extends Record<string, EncodeAndDecodeOptions | boolean>,
 >(
@@ -185,7 +193,7 @@ function create_recursive_proxy<
 	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
 	overrides: Record<string | symbol, unknown>,
 	old_values: Map<string | symbol, Options<T>>,
-	store_options: StoreOptions,
+	navigation_options: NavigationOptions,
 	path: string[] = [],
 	navigator?: ReturnType<typeof create_root_navigator>,
 ) {
@@ -193,7 +201,10 @@ function create_recursive_proxy<
 		target as LooseAutocomplete<Options<T>>,
 		{
 			get(target, name) {
+				// we use the RAW symbol to get the original target (this is currently not used but better have it)
 				if (name === RAW) return target;
+				// if the path length is different from 0 we just return the actual value
+				// same if it's a symbol (this is svelte checking if we are state)
 				if (typeof name === 'symbol' || path.length !== 0)
 					return Reflect.get(target, name);
 				const value =
@@ -209,14 +220,14 @@ function create_recursive_proxy<
 						encodes,
 						overrides,
 						old_values,
-						store_options,
+						navigation_options,
 						[...path, name],
 						navigator ??
 							create_root_navigator(
 								value,
 								encodes,
 								overrides,
-								store_options,
+								navigation_options,
 							),
 					);
 				}
@@ -226,11 +237,19 @@ function create_recursive_proxy<
 				if (typeof name === 'symbol')
 					return Reflect.set(target, name, value);
 				if (!browser) return true;
+				// if we have a navigator we call the navigator (we are in a proxy and we are setting a leaf)
 				if (navigator) {
 					navigator(path, name, value);
 					return true;
 				}
-				do_navigate(name, value, encodes, overrides, store_options);
+				// otherwise we just navigate
+				do_navigate(
+					name,
+					value,
+					encodes,
+					overrides,
+					navigation_options,
+				);
 				return true;
 			},
 			has(target, name) {
@@ -241,6 +260,9 @@ function create_recursive_proxy<
 	);
 }
 
+/**
+ * function to check if we should show the default and eventually navigate to update the url
+ */
 function should_default(
 	value: unknown,
 	key: string,
@@ -248,7 +270,7 @@ function should_default(
 	show_defaults: boolean,
 	encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']>,
 	overrides: Record<string | symbol, unknown>,
-	store_options: StoreOptions,
+	navigation_options: NavigationOptions,
 ): option is EncodeAndDecodeOptions {
 	if (
 		value == undefined &&
@@ -261,7 +283,7 @@ function should_default(
 				option.defaultValue,
 				encodes,
 				overrides,
-				store_options,
+				navigation_options,
 			);
 		}
 		return true;
@@ -273,15 +295,20 @@ export function queryParameters<
 	T extends Record<string, EncodeAndDecodeOptions | boolean>,
 >(
 	options?: T,
-	store_options: StoreOptions = {},
+	navigation_options: NavigationOptions = {},
 ): LooseAutocomplete<Options<T>> {
-	const { showDefaults: show_defaults = true } = store_options;
+	const { showDefaults: show_defaults = true } = navigation_options;
+	// keeps all the deriveds for every single property
 	const cache: Partial<T> = {};
+	// al the decode functions
 	const decodes: Map<string | symbol, EncodeAndDecodeOptions['decode']> =
 		new Map();
+	// all the encode functions
 	const encodes: Map<string | symbol, EncodeAndDecodeOptions['encode']> =
 		new Map();
+	// all the old references of the derived (to prevent unnecessary reactions)
 	const old_values: Map<string | symbol, Options<T>> = new Map();
+	// all the overrides (it's a $state and not a SvelteMap because when deleting a value SvelteMap invalidate the whole Map)
 	const overrides: Record<string | symbol, unknown> = $state({});
 	for (const key in options) {
 		const decode =
@@ -308,12 +335,16 @@ export function queryParameters<
 					show_defaults,
 					encodes,
 					overrides,
-					store_options,
+					navigation_options,
 				)
 			) {
+				// return the default value on the server (we can't set the override in $effect.pre
+				// because it only execute on the client and if we set overrides on the server is not
+				// actually reactive)
 				return options[key].defaultValue;
 			}
 			const old_value = old_values.get(key) ?? null;
+			// check if the old value is conceptually the same as the new, in case return the new value
 			if (
 				is_complex_equal(
 					$state.snapshot(value),
@@ -325,11 +356,13 @@ export function queryParameters<
 			) {
 				return old_value;
 			}
+			// store the old value
 			old_values.set(key, $state.snapshot(value));
 			return value;
 		});
 
 		$effect.pre(() => {
+			// override in case the param is null and we need to show the default
 			if (
 				should_default(
 					der,
@@ -338,7 +371,7 @@ export function queryParameters<
 					show_defaults,
 					encodes,
 					overrides,
-					store_options,
+					navigation_options,
 				)
 			) {
 				overrides[key] = options[key].defaultValue;
@@ -358,6 +391,6 @@ export function queryParameters<
 		encodes,
 		overrides,
 		old_values,
-		store_options,
+		navigation_options,
 	);
 }
