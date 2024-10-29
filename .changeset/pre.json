@@ -2,7 +2,7 @@
   "mode": "pre",
   "tag": "next",
   "initialVersions": {
-    "sveltekit-search-params": "3.0.0"
+    "sveltekit-search-params": "4.0.0"
   },
   "changesets": []
 }
