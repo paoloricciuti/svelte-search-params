@@ -4,5 +4,7 @@
   "initialVersions": {
     "sveltekit-search-params": "4.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "yellow-sloths-wave"
+  ]
 }
