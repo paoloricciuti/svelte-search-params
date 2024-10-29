@@ -1,5 +1,5 @@
 ---
-'sveltekit-search-params': breaking
+'sveltekit-search-params': major
 ---
 
 feat: upgrade to using runes
