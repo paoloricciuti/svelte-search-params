@@ -1,0 +1,8 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "sveltekit-search-params": "3.0.0"
+  },
+  "changesets": []
+}

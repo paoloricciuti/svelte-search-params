@@ -1,4 +1,7 @@
-import type { EncodeAndDecodeOptions } from '$lib/types';
+import type {
+	CurriedEncodeAndDecode,
+	EncodeAndDecodeOptions,
+} from '$lib/types';
 import {
 	compressToEncodedURIComponent,
 	decompressFromEncodedURIComponent,
@@ -6,16 +9,16 @@ import {
 
 export function lzEncodeAndDecodeOptions<T = any>(
 	defaultValue: T,
-): EncodeAndDecodeOptions<T> & { defaultValue: T };
+): CurriedEncodeAndDecode<T> & { defaultValue: T };
 export function lzEncodeAndDecodeOptions<
 	T = any,
->(): EncodeAndDecodeOptions<T> & {
+>(): CurriedEncodeAndDecode<T> & {
 	defaultValue: undefined;
 };
 export function lzEncodeAndDecodeOptions<T = any>(
 	defaultValue?: T,
-): EncodeAndDecodeOptions<T> {
-	return {
+): CurriedEncodeAndDecode<T> {
+	const encode_and_decode = {
 		encode: (value: T) =>
 			compressToEncodedURIComponent(JSON.stringify(value)),
 		decode: (value: string | null): T | null => {
@@ -30,4 +33,10 @@ export function lzEncodeAndDecodeOptions<T = any>(
 		},
 		defaultValue,
 	};
+	function curry_equality(
+		equality_fn: EncodeAndDecodeOptions<T>['equalityFn'],
+	) {
+		return { ...encode_and_decode, equalityFn: equality_fn };
+	}
+	return Object.assign(curry_equality, encode_and_decode);
 }

@@ -1,5 +1,5 @@
 // Reexport your entry components here
 import ssp from './ssp';
 
-export { queryParameters, queryParam } from './sveltekit-search-params';
+export { queryParameters } from './sveltekit-search-params.svelte.js';
 export { ssp };

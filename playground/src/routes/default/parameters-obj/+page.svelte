@@ -1,3 +1,5 @@
+<svelte:options runes />
+
 <script lang="ts">
 	import { queryParameters, ssp } from 'sveltekit-search-params';
 
@@ -6,6 +8,6 @@
 
 <a href="/default/parameters-obj">reset</a>
 
-{#if $obj.obj}
-	<input bind:value={$obj.obj.test} />
+{#if obj.obj}
+	<input bind:value={obj.obj.test} />
 {/if}

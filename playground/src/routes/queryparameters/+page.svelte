@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	import { queryParameters, ssp } from 'sveltekit-search-params';
 
 	const store = queryParameters({
@@ -19,76 +21,76 @@
 		},
 	);
 
-	let change_in_store = 0;
+	let change_in_store = $state(0);
 
-	$: {
-		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
-		$store;
-		change_in_store++;
-	}
+	$effect(() => {
+		JSON.stringify(store);
+		untrack(() => {
+			change_in_store++;
+		});
+	});
 </script>
 
-<input data-testid="str-input" bind:value={$store.str} />
-<div data-testid="str">{$store.str}</div>
+<input data-testid="str-input" bind:value={store.str} />
+<div data-testid="str">{store.str}</div>
 
 <button
 	data-testid="num"
-	on:click={() => {
-		if ($store.num != undefined) {
-			$store.num++;
+	onclick={() => {
+		if (store.num != undefined) {
+			store.num++;
 		}
-	}}>{$store.num}</button
+	}}>{store.num}</button
 >
 
-<input data-testid="bools" type="checkbox" bind:checked={$store.bools} />
+<input data-testid="bools" type="checkbox" bind:checked={store.bools} />
 
-{#if $store.obj}
-	<input data-testid="obj-input" bind:value={$store.obj.str} />
-	<div data-testid="obj">{JSON.stringify($store.obj)}</div>
+{#if store.obj}
+	<input data-testid="obj-input" bind:value={store.obj.str} />
+	<div data-testid="obj">{JSON.stringify(store.obj)}</div>
 {/if}
 
 <button
-	on:click={() => {
-		if (!$store.arr) {
-			$store.arr = [];
+	onclick={() => {
+		if (!store.arr) {
+			store.arr = [];
 		}
-		$store.arr.push($store.arr.length);
-		$store.arr = $store.arr;
+		store.arr.push(store.arr.length);
 	}}
 	data-testid="arr-input">Add array</button
 >
 <ul>
-	{#each $store.arr ?? [] as num}
+	{#each store.arr ?? [] as num}
 		<li data-testid="arr">{num}</li>
 	{/each}
 </ul>
 
 <button
-	on:click={() => {
-		if (!$unordered_store['arr-unordered']) {
-			$unordered_store['arr-unordered'] = [];
+	onclick={() => {
+		if (!unordered_store['arr-unordered']) {
+			unordered_store['arr-unordered'] = [];
 		}
-		$unordered_store['arr-unordered'].push(
-			$unordered_store['arr-unordered'].length,
+		unordered_store['arr-unordered'].push(
+			unordered_store['arr-unordered'].length,
 		);
-		$unordered_store['arr-unordered'] = $unordered_store['arr-unordered'];
+		unordered_store['arr-unordered'] = unordered_store['arr-unordered'];
 	}}
 	data-testid="arr-unordered-input">Add unordered array</button
 >
 <ul>
-	{#each $unordered_store['arr-unordered'] ?? [] as num}
+	{#each unordered_store['arr-unordered'] ?? [] as num}
 		<li data-testid="arr-unordered">{num}</li>
 	{/each}
 </ul>
 
-<input data-testid="lz-input" bind:value={$store.lz} />
-<div data-testid="lz">{$store.lz}</div>
+<input data-testid="lz-input" bind:value={store.lz} />
+<div data-testid="lz">{store.lz}</div>
 
 <button
 	data-testid="change-two"
-	on:click={() => {
-		$store.str = 'one';
-		$store.num = 42;
+	onclick={() => {
+		store.str = 'one';
+		store.num = 42;
 	}}>Change two</button
 >
 
