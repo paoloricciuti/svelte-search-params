@@ -13,7 +13,7 @@ let page: Readable<Pick<Page, 'url'>>;
 if (building) {
 	page = readable({
 		url: new URL(
-			'https://github.com/paoloricciuti/sveltekit-search-params',
+			'http://example.com',
 		),
 	});
 } else {
