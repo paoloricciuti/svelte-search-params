@@ -1,5 +1,5 @@
 ---
-'sveltekit-search-params': patch
+'sveltekit-search-params': breaking
 ---
 
 feat: upgrade to using runes
