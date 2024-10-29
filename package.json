@@ -1,7 +1,9 @@
 {
 	"name": "sveltekit-search-params",
 	"version": "3.0.0",
-	"repository": "git+https://github.com/paoloricciuti/sveltekit-search-params.git",
+	"repository": {
+		"url": "git+https://github.com/paoloricciuti/sveltekit-search-params.git"
+	},
 	"author": "Paolo Ricciuti",
 	"license": "MIT",
 	"homepage": "https://sveltekit-search-params.netlify.app",
@@ -25,7 +27,7 @@
 		"version:minor": "npm version minor",
 		"version:major": "npm version major",
 		"build:landing": "vite build",
-		"build": "svelte-kit sync && svelte-package -o package",
+		"build": "svelte-kit sync && svelte-package -o package && publint",
 		"build:playground": "cd playground && pnpm install --frozen-lockfile && pnpm run build",
 		"preview:playground": "cd playground && pnpm run preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -53,6 +55,7 @@
 		"globals": "^15.11.0",
 		"prettier": "^3.3.3",
 		"prettier-plugin-svelte": "^3.2.7",
+		"publint": "^0.2.12",
 		"svelte": "^5.1.3",
 		"svelte-check": "^4.0.5",
 		"svelte-material-icons": "^3.0.5",
@@ -71,9 +74,7 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": "./package/index.js",
-		"./lz-string": "./package/lz-string/index.js",
-		"./plugin": "./package/plugin.js",
-		"./sveltekit-search-params": "./package/sveltekit-search-params.js"
+		"./sveltekit-search-params": "./package/sveltekit-search-params.svelte.js"
 	},
 	"files": [
 		"package"
@@ -82,12 +83,6 @@
 		">4.0": {
 			"index": [
 				"./package/index.d.ts"
-			],
-			"lz-string": [
-				"./package/lz-string/index.d.ts"
-			],
-			"plugin": [
-				"./package/plugin.d.ts"
 			],
 			"sveltekit-search-params": [
 				"./package/sveltekit-search-params.d.ts"
