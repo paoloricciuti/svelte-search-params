@@ -40,6 +40,389 @@ Install sveltekit-search-params with npm
 
 ## Usage/Examples
 
+### Simple case
+
+To start using the library you can import the method `queryParameters`. You can invoke this method without arguments to get an object containing all the present search params.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters();
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+assuming the page is `/?framework=svelte&isCool=true` the above code will show
+
+```json
+{
+	"framework": "svelte",
+	"isCool": "true"
+}
+```
+
+by default all query parameters are string.
+
+### Writing to the store
+
+Reading query parameters is cool but you know what is even cooler? Writing query parameters! With this library you can treat your query parameters just like normal state in svelte. To update the state and consequently the url you can just do this
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters();
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+<input
+	value={params.username}
+	oninput={(e) => {
+		params.username = e.target.value;
+	}}
+/>
+```
+
+### Expecting some parameters
+
+Most of the times if you need to read from query parameters you are expecting some parameters to be present. You can define the parameters you are expecting during the initial invocation and those will be merged with the actual query parameters despite the fact that they are present or not.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		username: true,
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+assuming the page is `/?framework=svelte&isCool=true` the above code will show
+
+```json
+{
+	"framework": "svelte",
+	"isCool": "true",
+	"username": null
+}
+```
+
+if we add username to the URL like this `/?framework=svelte&isCool=true&username=paoloricciuti` we will get
+
+```json
+{
+	"framework": "svelte",
+	"isCool": "true",
+	"username": "paoloricciuti"
+}
+```
+
+### Encoding and Decoding
+
+By default query parameters are strings but more often than not though we are not working with strings. We are dealing with numbers, boolean, arrays and complex objects. During the initialization of the state you can specify an object containing an encode and a decode property that will be used to transform your data from and to the type you need.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		username: true,
+		isCool: {
+			encode: (booleanValue) => booleanValue.toString(),
+			decode: (stringValue) =>
+				stringValue !== null && stringValue !== 'false',
+		},
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+assuming the page is `/?framework=svelte&isCool=true&username=paoloricciuti` the above code will show
+
+```json
+{
+	"framework": "svelte",
+	"isCool": true,
+	"username": null
+}
+```
+
+notice that this time isCool it's a boolean and not a string anymore. With this particular transformation we've assured that if the url is the following `/?framework=svelte&isCool=false&username=paoloricciuti` or if the isCool parameter is completely missing like this `/?framework=svelte&username=paoloricciuti` we will get
+
+```json
+{
+	"framework": "svelte",
+	"isCool": false,
+	"username": null
+}
+```
+
+### Default values
+
+Sometimes when we want to create a new variable we like to pass a default value. You can do this by passing a third field, `defaultValue` in the object you pass to `queryParameters`.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		username: true,
+		count: {
+			encode: (value: number) => value.toString(),
+			decode: (value: string | null) => (value ? parseInt(value) : null),
+			defaultValue: 10,
+		},
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+this will make the query parameter have the default value and the URL change as soon as the page is rendered on the browser (the query parameter will change only if it's not already present and only the first time the application render).
+
+> **Warning**
+>
+> You can't run `goto` on the server so if the page is server side rendered it will still have the default value but it will not actually navigate until the client bundle loads.
+
+### Helpers encodings and decodings
+
+Write an encode and decode function may seem trivial but it's tedious for sure. `sveltekit-search-params` provide with a set of helpers for better readability and to avoid the hassle of writing common transforms. You can find those helpers exported in a ssp variable from the same package.
+
+```svelte
+<script lang="ts">
+	import { ssp, queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		username: true,
+		isCool: ssp.boolean(),
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+this code will produce the same output as the code written above but far more readable and easier to read. You can find all the exports documented in the section [ssp - Helpers](#ssp---helpers).
+
+You can also pass a default value to the function that will be the defaultValue of the object.
+
+```svelte
+<script lang="ts">
+	import { ssp, queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		username: true,
+		isCool: ssp.count(10),
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+## ssp - Helpers
+
+There are six helpers all exported as functions on the object ssp. To each one of them you can pass a parameter that will be the default value for that query param.
+
+#### object
+
+To map from a query parameter to an object. An url like this `/?obj={"isComplex":%20true,%20"nested":%20{"field":%20"value"}}` will be mapped to
+
+```typescript
+params.obj.isComplex; //true
+params.obj.nested; // {field: "value"}
+params.obj.nested.value; // "value"
+```
+
+#### array
+
+To map from a query parameter to an array. An url like this `/?arr=[1,2,3,4]` will be mapped to
+
+```typescript
+params.arr[0]; //1
+params.arr[1]; //2
+params.arr[2]; //3
+params.arr[3]; //4
+```
+
+#### number
+
+To map from a query parameter to a number. An url like this `/?num=1` will be mapped to
+
+```typescript
+params.num; //1
+```
+
+#### boolean
+
+To map from a query parameter to a boolean. An url like this `/?bool=true` will be mapped to
+
+```typescript
+params.bool; //true
+```
+
+as we've seen an url like this `/?bool=false` will be mapped to
+
+```typescript
+params.bool; //false
+```
+
+just like an url like this `/`
+
+#### string
+
+This is exported mainly for readability since all query parameters are already strings.
+
+#### lz
+
+To map any JSON serializable state to his lz-string representation. This is a common way to store state in query parameters that will prevent the link to directly show the state.
+
+An url like this `/?state=N4IgbghgNgrgpiAXCAsgTwAQGMD2OoYCO8ATpgA4QkQC2cALnCSAL5A` will map to
+
+```typescript
+params.state.value; //My cool query parameter
+```
+
+### equalityFn
+
+While this is not a problem for primitive values if your state has a complex object or an array as a value even if the reference is the same svelte will trigger reactivity for it. To provide you with optimistic updates there's the possibility that the state will change multiple times during a single navigation. To fix this problem by default we check if the value of the param is the same by using `JSON.stringify` so that if the overall shape of your param is the same we avoid triggering the reactivity.
+
+This is fine for most cases and you will likely never touch this option but if you have some use case not covered by `JSON.stringify` you can specify the option `equalityFn`. This option is a function that takes the `current` value and the `next` value as parameters and need to return a `boolean`. You should return `true` from this function when the value of the params is unchanged (according to your own logic). This will not trigger reactivity (note that the navigation will still happen).
+
+You can specify this function as another argument in the encode and decode options object.
+
+```svelte
+<script lang="ts">
+	import { queryParameters } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		obj: {
+			encode: (value: { value: string }) => JSON.stringify(value),
+			decode: (value: string | null) =>
+				value ? JSON.parse(value) : null,
+			equalityFn(current, next) {
+				return current?.value === next?.value;
+			},
+		},
+	});
+</script>
+
+<pre>
+    {JSON.stringify(params, null, 2)}
+</pre>
+```
+
+NOTE: the equality function will not be used on primitive values, hence you can't pass the equality function to parameters that have a primitive type.
+
+To specify the equality function if you are using the `ssp` helpers you can invoke the return value of the helper with the equality function.
+
+```ts
+ssp.number()((current, next) => {
+	// your equality function
+});
+
+// with default value
+ssp.number(10)((current, next) => {
+	// your equality function
+});
+```
+
+the helper make use of a technique called currying so that, if you don't need to pass the equality function you can just invoke the function (with or without a default parameter), and if you want to pass an equality function you can avoid passing an `undefined` as the first parameter.
+
+## Options
+
+The `queryParameters` function accept a configuration object that contains the following properties:
+
+### debounceHistory
+
+The number of milliseconds to delay the writing of the history when the state changes. This is to avoid cluttering the history of the user especially when some parameter is bound to an input text (every keystroke would cause a new history entry). It defaults to 0. If set a new entry in the history will be added only after `debounceHistory` seconds of "inactivity".
+
+### pushHistory
+
+A boolean defining if the history have to be written at all. If set to false no new history entries will be written to the history stack (the URL will still update but the user will not be able to go back with the browser).
+
+### sort
+
+Whenever you interact with the returned object, it navigates for you. By default the search params are sorted to allow for better cache-ability. You can disable this behavior by passing `false` to this option. Keep in mind that this is a per-object settings. This mean that if you interact with an object that has this option set to `false` and than interact with one that has this option set to `true` (the default) the resulting URL will still have the search params sorted.
+
+### showDefaults
+
+If you specify a default value for the search param and it's not present by default the library will immediately navigate to the url that contains the default search param. For example if you have this code
+
+```svelte
+<script lang="ts">
+	import { queryParameters, ssp } from 'sveltekit-search-params';
+
+	const params = queryParameters({
+		pageNum: ssp.number(0),
+	});
+</script>
+```
+
+and you navigate to `/` as soon as the page load it will be redirected to `/?pageNum=0`. If you prefer not to show the defaults in the URL you can set the `showDefaults` option to false.
+
+```svelte
+<script lang="ts">
+	import { queryParameters, ssp } from 'sveltekit-search-params';
+
+	const params = queryParameters(
+		{
+			pageNum: ssp.number(0),
+		},
+		{
+			showDefaults: false,
+		},
+	);
+</script>
+```
+
+By doing so `params` will still have a value of 0 if the search param is not present but the user will not be redirected to `/?pageNum=0`.
+
+### How to use it
+
+To set the configuration object you can pass it as a second parameter
+
+```svelte
+<script lang="ts">
+	import { ssp, queryParameters } from 'sveltekit-search-params';
+	const params = queryParameters(
+		{
+			username: true,
+			isCool: ssp.boolean(true),
+		},
+		{
+			debounceHistory: 500, // url will change after 500ms
+			pushHistory: false, // no new history entries for this object
+		},
+	);
+</script>
+```
+
+## Pre 3.0.0 documentation
+
+Version 4 of this library got a major rewrite to use the runes syntax released in svelte 5. If you are looking at the pre 4.0 documentation that uses a store you can find it in the following docs.
+
+<details>
+
+<summary>Open the v3.0 documentation</summary>
+
 ### Simple case (single parameter)
 
 The simplest and most effective way to use this library is by importing the method `queryParam`. You can invoke this method with a string that represent the search parameters you are looking for in the URL.
@@ -487,3 +870,5 @@ export default config;
 > **Warning**
 >
 > This step is required if you are running on an old version of vite/sveltekit
+
+</details>
