@@ -463,8 +463,8 @@ test.describe('equalityFn to specify when the store is the same as before (not t
 		await page.goto('/equalityFn?str=%7B%22value%22%3A%22test%22%7D');
 		const str_input = page.getByTestId('str2-input');
 		await str_input.selectText();
-		await str_input.press('Meta+c');
-		await str_input.press('Meta+v');
+		await str_input.press('ControlOrMeta+c');
+		await str_input.press('ControlOrMeta+v');
 		const obj_changes = page.getByTestId('how-many-store-changes');
 		await expect(obj_changes).toHaveText('3');
 	});
