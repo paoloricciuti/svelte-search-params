@@ -45,6 +45,7 @@
 		"@sveltejs/adapter-static": "^3.0.6",
 		"@sveltejs/kit": "^2.7.3",
 		"@sveltejs/package": "^2.3.7",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@svitejs/changesets-changelog-github-compact": "^1.2.0",
 		"eslint": "^9.13.0",
 		"eslint-config-prettier": "^9.1.0",
@@ -64,8 +65,8 @@
 	},
 	"type": "module",
 	"peerDependencies": {
-		"@sveltejs/kit": "^1.0.0 || ^2.0.0",
-		"svelte": "^3.55.0 || ^4.0.0 || ^5.0.0"
+		"@sveltejs/kit": "^2.0.0",
+		"svelte": "^5.0.0"
 	},
 	"exports": {
 		"./package.json": "./package.json",
@@ -92,8 +93,5 @@
 				"./package/sveltekit-search-params.d.ts"
 			]
 		}
-	},
-	"dependencies": {
-		"@sveltejs/vite-plugin-svelte": "^4.0.0"
 	}
 }
