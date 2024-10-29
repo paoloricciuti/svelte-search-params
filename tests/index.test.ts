@@ -469,3 +469,15 @@ test.describe('equalityFn to specify when the store is the same as before (not t
 		await expect(obj_changes).toHaveText('3');
 	});
 });
+
+test.describe('original methods are accessible on the returned object', () => {
+	test('JSON.stringify works', async ({ page }) => {
+		await page.goto(
+			'/original-methods?str=%7B%22value%22%3A%22test%22%7D&number=10&obj=%7B%22value%22%3A%22test%22%7D',
+		);
+		const stringified_text = page.getByTestId('stringified');
+		await expect(stringified_text).toHaveText(
+			'{"test":null,"number":10,"another_number":42,"obj":{"value":"test"},"str":"{\\"value\\":\\"test\\"}"}',
+		);
+	});
+});

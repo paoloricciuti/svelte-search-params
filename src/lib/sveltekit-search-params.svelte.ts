@@ -205,8 +205,38 @@ function create_recursive_proxy<
 				if (name === RAW) return target;
 				// if the path length is different from 0 we just return the actual value
 				// same if it's a symbol (this is svelte checking if we are state)
-				if (typeof name === 'symbol' || path.length !== 0)
-					return Reflect.get(target, name);
+				const reflected_value = Reflect.get(target, name);
+				if (typeof name === 'symbol' || path.length !== 0) {
+					return reflected_value;
+				}
+
+				// if we have a reflected value it means someone is trying to access a property on the object prototype
+				// in that case we return the same property from the cache object.
+				if (reflected_value) {
+					return Reflect.get(cache, name);
+				}
+
+				// special case for JSON.stringify
+				if (name === 'toJSON') {
+					return () => {
+						// snapshot the cache
+						const values = $state.snapshot(cache);
+						// on the server that's enough
+						if (!browser) return values;
+
+						// otherwise we mere with existing but not specified search params
+						const search_params = new URLSearchParams(
+							window.location.search,
+						);
+						for (const [key, value] of search_params.entries()) {
+							if (!(key in cache)) {
+								(values as any)[key] = value;
+							}
+						}
+						return values;
+					};
+				}
+
 				const value =
 					cache[name as never] ??
 					(decodes.get(name) ?? DEFAULT_ENCODER_DECODER.decode)(
@@ -382,6 +412,7 @@ export function queryParameters<
 			get() {
 				return der;
 			},
+			enumerable: true,
 		});
 	}
 	return create_recursive_proxy(
