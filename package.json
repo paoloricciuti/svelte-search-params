@@ -5,7 +5,6 @@
 	"author": "Paolo Ricciuti",
 	"license": "MIT",
 	"homepage": "https://sveltekit-search-params.netlify.app",
-	"packageManager": "pnpm@9.9.0",
 	"keywords": [
 		"sveltekit",
 		"svelte",
