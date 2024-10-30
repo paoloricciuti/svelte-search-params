@@ -1,17 +1,5 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["config:recommended"],
-	"packageRules": [
-		{
-			"extends": ["group:allNonMajor"],
-			"schedule": ["before 7am every friday"],
-			"lockFileMaintenance": {
-				"enabled": true
-			}
-		},
-		{
-			"matchUpdateTypes": ["patch", "pin"],
-			"matchCurrentVersion": "!/^0/"
-		}
-	]
+	"extends": ["config:recommended", "group:linters", ":labels(maintenance,renovatebot)"],
+	"rangeStrategy": "replace"
 }
