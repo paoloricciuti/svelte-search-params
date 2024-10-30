@@ -4,5 +4,10 @@
   "initialVersions": {
     "sveltekit-search-params": "4.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "sharp-bananas-boil",
+    "sour-owls-count",
+    "ten-wombats-jam",
+    "yellow-sloths-wave"
+  ]
 }
