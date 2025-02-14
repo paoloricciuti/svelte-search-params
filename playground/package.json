@@ -22,6 +22,6 @@
 	"type": "module",
 	"dependencies": {
 		"sveltekit-search-params": "link:..",
-		"vitest": "^2.0.4"
+		"vitest": "^3.0.0"
 	}
 }
